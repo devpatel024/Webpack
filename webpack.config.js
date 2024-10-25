@@ -1,38 +1,43 @@
-const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const { default: merge } = require('webpack-merge');
+const developmentConfig = require('./webpack.dev.config');
+const productionConfig = require('./webpack.prod.config');
 
-module.exports = {
-    entry: './abc/index.js',
-    output: {
-        path: path.resolve(__dirname, 'output'),
-        filename: 'main.js',
+const commonConfig = {
+    entry: './src/index.jsx',
+    resolve: {
+        extensions: ['.js', '.json', '.jsx'],
     },
-    mode: "development",
     module: {
         rules: [
             {
-                test: /\.m?js$/,
+                test: /\.jsx?$/,
                 exclude: /node_modules/,
-                use: "babel-loader",
+                use: 'babel-loader',
             },
-            {
-                test: /\.m?css$/,
-                exclude: /node_modules/,
-                use: [MiniCssExtractPlugin.loader, "css-loader", "postcss-loader"],
-            },
-        ]
-    },
-    optimization: {
-        minimizer: [
-            new CssMinimizerPlugin(),
         ],
     },
-    plugins: [new HtmlWebpackPlugin({
-        template: "./public/index.html",
-        filename: "index.html",
-    }),
-    new MiniCssExtractPlugin(),
-],
+    plugins: [
+        new CleanWebpackPlugin(),
+        new HtmlWebpackPlugin({
+            template: './public/index.html',
+            filename: 'index.html',
+        }),
+    ],
+};
+
+module.exports = (env, args) => {
+    console.log(env);
+    console.log(args);
+    
+
+    switch (process.env.NODE_ENV) {
+        case 'development':
+            return merge(commonConfig, developmentConfig);
+        case 'production':
+            return merge(commonConfig, productionConfig);
+        default:
+            throw new Error('No matching configuration was found!');
+    }
 };
